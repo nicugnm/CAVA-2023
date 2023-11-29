@@ -1,76 +1,55 @@
-import cv2
 import cv2 as cv
 import os
 import numpy as np
 
-def show_image(title,image):
-    image=cv.resize(image,(0,0),fx=0.3,fy=0.3)
-    cv.imshow(title,image)
+
+def show_image(title, image):
+    image = cv.resize(image, (0, 0), fx=0.3, fy=0.3)
+    cv.imshow(title, image)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def show_images(careu):
-    files = os.listdir('antrenare')
-    nr_joc = 1
-    nr_mutare = 1
-    for file in files:
-        if nr_mutare == 21:
-            nr_joc = nr_joc + 1
-            nr_mutare = 1
-        if nr_joc == 6:
-            break
-        if file[-3:] == 'jpg':
-            image_path = 'antrenare/' + str(nr_joc) + '_' + ('0' if nr_mutare <= 9 else '') + str(nr_mutare) + '.jpg'
-            print(image_path)
-            img = cv.imread(image_path)
-            if careu == 0:
-                show_image('img', img)
-                show_image('resized', imagine_decupata(img))
-            else:
-                img = continut_mijloc_alb(img)
-                arata_careu(imagine_decupata(img))
 
-            nr_mutare = nr_mutare + 1
+piesa_gasita = []
+
+
+def determina_configuratie_careu_olitere(img_hsv, lines_horizontal, lines_vertical, img_original):
+    matrix = np.empty((15, 15), dtype='str')
+    show_image("mask_hsv", img_hsv)
+    for i in range(len(lines_horizontal) - 1):
+        for j in range(len(lines_vertical) - 1):
+            y_min = lines_vertical[j][0][0] + 5
+            y_max = lines_vertical[j + 1][1][0] - 5
+            x_min = lines_horizontal[i][0][1] + 5
+            x_max = lines_horizontal[i + 1][1][1] - 5
+            patch = img_hsv[x_min:x_max, y_min:y_max].copy()
+            y_min = lines_vertical[j][0][0] + 8
+            y_max = lines_vertical[j + 1][1][0] - 8
+            x_min = lines_horizontal[i][0][1] + 8
+            x_max = lines_horizontal[i + 1][1][1] - 8
+            patch_original = img_original[x_min:x_max, y_min:y_max].copy()
+            # show_image("mask_hsv",patch)
+            Medie_patch = np.mean(patch)
+            if Medie_patch > 50:
+                show_image("mask_hsv", patch)
+                matrix[i][j] = "1"  # to do
+            else:
+                matrix[i][j] = "o"
+    return matrix
+
 
 def imagine_decupata(image):
     height, width, _ = image.shape
     return image[1150:height - 1150, 720:width - 600]
 
-def continut_mijloc_alb(image):
-    height, width, _ = image.shape
-
-    # Definirea zonei din mijloc pe care dorești să o faci alb
-    center_box_width = 1000  # Lățimea zonei
-    center_box_height = 1000  # Înălțimea zonei
-
-    # Calculează coordonatele colțului stânga-sus al zonei din mijloc
-    start_x = (width - center_box_width) // 2
-    start_y = (height - center_box_height) // 2
-
-    # Creează o mască pentru zona din mijloc (grayscale)
-    mask = np.zeros((height, width), dtype=np.uint8)
-    mask[start_y:start_y + center_box_height, start_x:start_x + center_box_width] = 255
-
-    # Setează zona din mijloc la alb în imagine
-    image[mask == 255] = [0, 0, 0]
-
-    return image
 
 def extrage_careu(image):
-    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    image_m_blur = cv.medianBlur(image, 3)
-    image_g_blur = cv.GaussianBlur(image_m_blur, (0, 0), 5)
-    image_sharpened = cv.addWeighted(image_m_blur, 0.9, image_g_blur, -0.4, 0)
-    show_image('image_sharpened',image_sharpened)
-    _, thresh = cv.threshold(image_sharpened, 30, 255, cv.THRESH_BINARY)
+    low_yellow = (80, 70, 0)
+    high_yellow = (255, 255, 255)
+    img_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    mask_yellow_hsv = cv.inRange(img_hsv, low_yellow, high_yellow)
 
-    kernel = np.ones((3, 3), np.uint8)
-    thresh = cv.erode(thresh, kernel)
-    show_image('image_thresholded',thresh)
-
-    # edges = cv.Canny(thresh, 300, 400)
-    # show_image('edges',edges)
-    contours, _ = cv.findContours(thresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv.findContours(mask_yellow_hsv, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     max_area = 0
 
     for i in range(len(contours)):
@@ -97,16 +76,15 @@ def extrage_careu(image):
                 top_right = possible_top_right
                 bottom_left = possible_bottom_left
 
-    width = 810
-    height = 810
+    width = 1500
+    height = 1500
 
-    image_copy = cv.cvtColor(image.copy(), cv.COLOR_GRAY2BGR)
+    image_copy = image
     cv.circle(image_copy, tuple(top_left), 20, (0, 0, 255), -1)
     cv.circle(image_copy, tuple(top_right), 20, (0, 0, 255), -1)
     cv.circle(image_copy, tuple(bottom_left), 20, (0, 0, 255), -1)
     cv.circle(image_copy, tuple(bottom_right), 20, (0, 0, 255), -1)
-    show_image("detected corners",image_copy)
-    return
+    show_image("detected corners", image_copy)
 
     puzzle = np.array([top_left, top_right, bottom_right, bottom_left], dtype="float32")
     destination_of_puzzle = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype="float32")
@@ -114,31 +92,71 @@ def extrage_careu(image):
     M = cv.getPerspectiveTransform(puzzle, destination_of_puzzle)
 
     result = cv.warpPerspective(image, M, (width, height))
-    result = cv.cvtColor(result, cv.COLOR_GRAY2BGR)
 
     return result
 
+
 def arata_careu(img):
     lines_horizontal = []
-    for i in range(0, 811, 90):
+    for i in range(0, 1500, 200):
         l = []
         l.append((0, i))
-        l.append((809, i))
+        l.append((1500, i))
         lines_horizontal.append(l)
 
     lines_vertical = []
-    for i in range(0, 811, 90):
+    for i in range(0, 1500, 200):
         l = []
         l.append((i, 0))
-        l.append((i, 809))
+        l.append((i, 1500))
         lines_vertical.append(l)
-
-
     result = extrage_careu(img)
     for line in lines_vertical:
         cv.line(result, line[0], line[1], (0, 255, 0), 5)
     for line in lines_horizontal:
         cv.line(result, line[0], line[1], (0, 0, 255), 5)
     show_image('img', result)
+
+    return result
+
+
+lines_horizontal = []
+for i in range(0, 1500, 200):
+    l = []
+    l.append((0, i))
+    l.append((1500, i))
+    lines_horizontal.append(l)
+
+lines_vertical = []
+for i in range(0, 1500, 100):
+    l = []
+    l.append((i, 0))
+    l.append((i, 1500))
+    lines_vertical.append(l)
+
+
+def show_images(careu):
+    files = os.listdir('antrenare')
+    nr_joc = 1
+    nr_mutare = 1
+    for file in files:
+        if nr_mutare == 21:
+            nr_joc = nr_joc + 1
+            nr_mutare = 1
+        if nr_joc == 6:
+            break
+        if file[-3:] == 'jpg':
+            image_path = 'antrenare/' + str(nr_joc) + '_' + ('0' if nr_mutare <= 9 else '') + str(nr_mutare) + '.jpg'
+            print(image_path)
+            img = cv.imread(image_path)
+            result = extrage_careu(imagine_decupata(img))
+
+            low_yellow = (0, 0, 232)
+            high_yellow = (123, 255, 255)
+            img_hsv = cv.cvtColor(result.copy(), cv.COLOR_BGR2HSV)
+            mask_yellow_hsv = cv.inRange(img_hsv, low_yellow, high_yellow)
+            matrice = determina_configuratie_careu_olitere(mask_yellow_hsv, lines_horizontal, lines_vertical, result)
+            nr_mutare = nr_mutare + 1
+
 
 show_images(careu=1)
