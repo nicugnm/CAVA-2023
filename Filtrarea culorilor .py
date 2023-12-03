@@ -42,7 +42,7 @@ def find_color_values_using_custom_trackbar(frame):
 
     cv.destroyAllWindows()
 
-img = cv.imread("antrenare/1_01.jpg")
+img = cv.imread("imagini_auxiliare/02.jpg")
 cv.namedWindow('img_initial', cv.WINDOW_NORMAL)
 cv.imshow('img_initial', img)
 cv.waitKey(0)

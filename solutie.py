@@ -51,11 +51,10 @@ def extrage_careu(image):
     width = 1500
     height = 1500
 
-    image_copy = image
-    cv.circle(image_copy, tuple(top_left), 20, (0, 0, 255), -1)
-    cv.circle(image_copy, tuple(top_right), 20, (0, 0, 255), -1)
-    cv.circle(image_copy, tuple(bottom_left), 20, (0, 0, 255), -1)
-    cv.circle(image_copy, tuple(bottom_right), 20, (0, 0, 255), -1)
+    # cv.circle(image_copy, tuple(top_left), 20, (0, 0, 255), -1)
+    # cv.circle(image_copy, tuple(top_right), 20, (0, 0, 255), -1)
+    # cv.circle(image_copy, tuple(bottom_left), 20, (0, 0, 255), -1)
+    # cv.circle(image_copy, tuple(bottom_right), 20, (0, 0, 255), -1)
     #show_image("detected corners", image_copy)
 
     puzzle = np.array([top_left, top_right, bottom_right, bottom_left], dtype="float32")
@@ -102,6 +101,9 @@ def show_images():
                         patch = result[lines:lines+100, columns:columns+200].copy()
                         are_cercuri = detecteaza_cercuri(patch.copy())[0]
 
+                        #if nr_joc_template == '2_01' or nr_joc_template == '1_20':
+                        #    are_cercuri = detecteaza_cercuri(patch.copy(), show=nr_joc_template, lines=lines, columns=columns)[0]
+
                         if are_cercuri is not None:
                             #show_image('patch', detecteaza_cercuri(patch.copy())[0])
                             img_despartita = patch[0:100, 0:100]
@@ -113,14 +115,14 @@ def show_images():
                                 line_1, col_1 = translate_line_column(lines, columns)
                                 line_2, col_2 = translate_line_column(lines, columns + 100)
 
-                                if (line_1, col_1) not in piese_tabla:
-                                    piese_tabla.append((line_1, col_1))
+                                if (nr_joc, line_1, col_1) not in piese_tabla:
+                                    piese_tabla.append((nr_joc, line_1, col_1))
                                     str_tuplu = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                     fisier.writelines(str_tuplu)
                                     print("Linie si col", line_1, col_1)
 
-                                if (line_2, col_2) not in piese_tabla:
-                                    piese_tabla.append((line_2, col_2))
+                                if (nr_joc, line_2, col_2) not in piese_tabla:
+                                    piese_tabla.append((nr_joc, line_2, col_2))
                                     str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                     fisier.writelines(str_tuplu2)
                                     print("Linie si col", line_2, col_2)
@@ -139,11 +141,29 @@ def show_images():
                                 if (are_cercuri_1 is None) and (percentage_white >= 70):
                                     line_1, col_1 = translate_line_column(lines, columns)
 
-                                    if (line_1, col_1) not in piese_tabla:
-                                        piese_tabla.append((line_1, col_1))
+                                    if (nr_joc, line_1, col_1) not in piese_tabla:
+                                        piese_tabla.append((nr_joc, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
                                         print("Linie si col", line_1, col_1)
+
+                                    img_hsv_fara_cercuri_2 = cv.cvtColor(img_despartita_2.copy(), cv.COLOR_BGR2HSV)
+                                    mask_yellow_hsv_img_despartita_2 = cv.inRange(img_hsv_fara_cercuri_2,
+                                                                                  low_yellow_fara_cercuri,
+                                                                                  high_yellow_fara_cercuri)
+
+                                    white_pixels = np.sum(mask_yellow_hsv_img_despartita_2 >= 200)
+                                    total_pixels = mask_yellow_hsv_img_despartita_2.size
+                                    percentage_white = (white_pixels / total_pixels) * 100
+
+                                    if (are_cercuri_2 is not None) and (percentage_white >= 60):
+                                        line_2, col_2 = translate_line_column(lines, columns + 100)
+
+                                        if (nr_joc, line_2, col_2) not in piese_tabla:
+                                            piese_tabla.append((nr_joc, line_2, col_2))
+                                            str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
+                                            fisier.writelines(str_tuplu2)
+                                            print("Linie si col", line_2, col_2)
 
                                 img_hsv_fara_cercuri_2 = cv.cvtColor(img_despartita_2.copy(), cv.COLOR_BGR2HSV)
                                 mask_yellow_hsv_img_despartita_2 = cv.inRange(img_hsv_fara_cercuri_2,
@@ -157,17 +177,39 @@ def show_images():
                                 if (are_cercuri_2 is None) and (percentage_white >= 70):
                                     line_2, col_2 = translate_line_column(lines, columns + 100)
 
-                                    if (line_2, col_2) not in piese_tabla:
-                                        piese_tabla.append((line_2, col_2))
-                                        str_tuplu2 = str(line_2) + str(col_2) + " " + str(0) + str("\n")
-                                        fisier.writelines(str_tuplu2)
+                                    if (nr_joc, line_2, col_2) not in piese_tabla:
+                                        piese_tabla.append((nr_joc, line_2, col_2))
+                                        str_tuplu = str(line_2) + str(col_2) + " " + str(0) + str("\n")
+                                        fisier.writelines(str_tuplu)
                                         print("Linie si col", line_2, col_2)
+
+                                    img_hsv_fara_cercuri_1 = cv.cvtColor(img_despartita.copy(), cv.COLOR_BGR2HSV)
+                                    mask_yellow_hsv_img_despartita_1 = cv.inRange(img_hsv_fara_cercuri_1,
+                                                                                  low_yellow_fara_cercuri,
+                                                                                  high_yellow_fara_cercuri)
+
+                                    white_pixels = np.sum(mask_yellow_hsv_img_despartita_1 >= 200)
+                                    total_pixels = mask_yellow_hsv_img_despartita_1.size
+                                    percentage_white = (white_pixels / total_pixels) * 100
+
+                                    if (are_cercuri_1 is not None) and (percentage_white >= 60):
+                                        line_1, col_1 = translate_line_column(lines, columns)
+
+                                        if (nr_joc, line_1, col_1) not in piese_tabla:
+                                            piese_tabla.append((nr_joc, line_1, col_1))
+                                            str_tuplu2 = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
+                                            fisier.writelines(str_tuplu2)
+                                            print("Linie si col", line_1, col_1)
+
                 # piese pe verticala
                 for lines in range(i, 1500 if i != 0 else 1300, 200):
                     for columns in range(0, 1500, 100):
                         patch = result[lines:lines+200, columns:columns+100].copy()
 
                         are_cercuri = detecteaza_cercuri(patch.copy())[0]
+
+                        # if (nr_joc_template == '1_19' or nr_joc_template == '1_20') and (lines == 200 and columns == 0):
+                        #     are_cercuri = detecteaza_cercuri(patch.copy(), show=nr_joc_template, lines=lines, columns=columns)[0]
 
                         if are_cercuri is not None:
                             img_despartita = patch[0:100, 0:100]
@@ -178,14 +220,14 @@ def show_images():
                                 line_1, col_1 = translate_line_column(lines, columns)
                                 line_2, col_2 = translate_line_column(lines + 100, columns)
 
-                                if (line_1, col_1) not in piese_tabla:
-                                    piese_tabla.append((line_1, col_1))
+                                if (nr_joc, line_1, col_1) not in piese_tabla:
+                                    piese_tabla.append((nr_joc, line_1, col_1))
                                     str_tuplu = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                     fisier.writelines(str_tuplu)
                                     print("Linie si col", line_1, col_1)
 
-                                if (line_2, col_2) not in piese_tabla:
-                                    piese_tabla.append((line_2, col_2))
+                                if (nr_joc, line_2, col_2) not in piese_tabla:
+                                    piese_tabla.append((nr_joc, line_2, col_2))
                                     str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                     fisier.writelines(str_tuplu2)
                                     print("Linie si col", line_2, col_2)
@@ -206,11 +248,29 @@ def show_images():
                                 if (are_cercuri_1 is None) and (percentage_white >= 70):
                                     line_1, col_1 = translate_line_column(lines, columns)
 
-                                    if (line_1, col_1) not in piese_tabla:
-                                        piese_tabla.append((line_1, col_1))
+                                    if (nr_joc, line_1, col_1) not in piese_tabla:
+                                        piese_tabla.append((nr_joc, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
                                         print("Linie si col", line_1, col_1)
+
+                                    img_hsv_fara_cercuri_2 = cv.cvtColor(img_despartita_2.copy(), cv.COLOR_BGR2HSV)
+                                    mask_yellow_hsv_img_despartita_2 = cv.inRange(img_hsv_fara_cercuri_2,
+                                                                                  low_yellow_fara_cercuri,
+                                                                                  high_yellow_fara_cercuri)
+
+                                    white_pixels = np.sum(mask_yellow_hsv_img_despartita_2 >= 200)
+                                    total_pixels = mask_yellow_hsv_img_despartita_2.size
+                                    percentage_white = (white_pixels / total_pixels) * 100
+
+                                    if (are_cercuri_2 is not None) and (percentage_white >= 60):
+                                        line_2, col_2 = translate_line_column(lines + 100, columns)
+
+                                        if (nr_joc, line_2, col_2) not in piese_tabla:
+                                            piese_tabla.append((nr_joc, line_2, col_2))
+                                            str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
+                                            fisier.writelines(str_tuplu2)
+                                            print("Linie si col", line_2, col_2)
 
                                 img_hsv_fara_cercuri_2 = cv.cvtColor(img_despartita_2.copy(), cv.COLOR_BGR2HSV)
                                 mask_yellow_hsv_img_despartita_2 = cv.inRange(img_hsv_fara_cercuri_2,
@@ -224,11 +284,30 @@ def show_images():
                                 if (are_cercuri_2 is None) and (percentage_white >= 70):
                                     line_2, col_2 = translate_line_column(lines + 100, columns)
 
-                                    if (line_2, col_2) not in piese_tabla:
-                                        piese_tabla.append((line_2, col_2))
-                                        str_tuplu2 = str(line_2) + str(col_2) + " " + str(0) + str("\n")
-                                        fisier.writelines(str_tuplu2)
+                                    if (nr_joc, line_2, col_2) not in piese_tabla:
+                                        piese_tabla.append((nr_joc, line_2, col_2))
+                                        str_tuplu = str(line_2) + str(col_2) + " " + str(0) + str("\n")
+                                        fisier.writelines(str_tuplu)
                                         print("Linie si col", line_2, col_2)
+
+                                    img_hsv_fara_cercuri_1 = cv.cvtColor(img_despartita.copy(), cv.COLOR_BGR2HSV)
+                                    mask_yellow_hsv_img_despartita_1 = cv.inRange(img_hsv_fara_cercuri_1,
+                                                                                  low_yellow_fara_cercuri,
+                                                                                  high_yellow_fara_cercuri)
+
+                                    white_pixels = np.sum(mask_yellow_hsv_img_despartita_1 >= 200)
+                                    total_pixels = mask_yellow_hsv_img_despartita_1.size
+                                    percentage_white = (white_pixels / total_pixels) * 100
+
+                                    if (are_cercuri_1 is not None) and (percentage_white >= 60):
+                                        line_1, col_1 = translate_line_column(lines, columns)
+
+                                        if (nr_joc, line_1, col_1) not in piese_tabla:
+                                            piese_tabla.append((nr_joc, line_1, col_1))
+                                            str_tuplu2 = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
+                                            fisier.writelines(str_tuplu2)
+                                            print("Linie si col", line_1, col_1)
+
 
                 # piese pe orizontala pentru domino cu 0 cercuri
                 for lines in range(0, 1500, 100):
@@ -269,13 +348,13 @@ def show_images():
                                     line_1, col_1 = translate_line_column(lines, columns)
                                     line_2, col_2 = translate_line_column(lines, columns + 100)
 
-                                    if ((line_1, col_1) not in piese_tabla) and ((line_2, col_2) not in piese_tabla):
-                                        piese_tabla.append((line_1, col_1))
+                                    if ((nr_joc, line_1, col_1) not in piese_tabla) and ((nr_joc, line_2, col_2) not in piese_tabla):
+                                        piese_tabla.append((nr_joc, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
                                         print("Linie si col", line_1, col_1)
 
-                                        piese_tabla.append((line_2, col_2))
+                                        piese_tabla.append((nr_joc, line_2, col_2))
                                         str_tuplu2 = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu2)
                                         print("Linie si col", line_2, col_2)
@@ -320,13 +399,13 @@ def show_images():
                                     line_1, col_1 = translate_line_column(lines, columns)
                                     line_2, col_2 = translate_line_column(lines + 100, columns)
 
-                                    if ((line_1, col_1) not in piese_tabla) and ((line_2, col_2) not in piese_tabla):
-                                        piese_tabla.append((line_1, col_1))
+                                    if ((nr_joc, line_1, col_1) not in piese_tabla) and ((nr_joc, line_2, col_2) not in piese_tabla):
+                                        piese_tabla.append((nr_joc, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
                                         print("Linie si col", line_1, col_1)
 
-                                        piese_tabla.append((line_2, col_2))
+                                        piese_tabla.append((nr_joc, line_2, col_2))
                                         str_tuplu2 = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu2)
                                         print("Linie si col", line_2, col_2)
@@ -335,7 +414,7 @@ def show_images():
 
             nr_mutare = nr_mutare + 1
 
-def detecteaza_cercuri(img):
+def detecteaza_cercuri(img, show=0, lines=0, columns=0):
     # Convert to grayscale
     #show_image('img', img)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -350,19 +429,25 @@ def detecteaza_cercuri(img):
         dp=1,  # Inverse ratio of the accumulator resolution to the image resolution (1 means the same resolution)
         minDist=25,  # Minimum distance between the centers of detected circles
         param1=600,  # Higher threshold for the internal Canny edge detector
-        param2=30,  # Threshold for circle detection (lower means more circles will be detected)
-        minRadius=1,  # Minimum radius of the detected circles
-        maxRadius=20  # Maximum radius of the detected circles
+        param2=25,  # Threshold for circle detection (lower means more circles will be detected)
+        minRadius=10,  # Minimum radius of the detected circles
+        maxRadius=14  # Maximum radius of the detected circles
     )
 
-    # If circles are found, draw them on the image
-    #if circles is not None:
-        #circles = np.uint16(np.around(circles))
-        #for i in circles[0, :]:
-            # Draw the outer circle
-            #cv.circle(img, (i[0], i[1]), i[2], (0, 255, 0), 2)
-            # Draw the center of the circle
-            #cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
+    if show != 0:
+        # If circles are found, draw them on the image
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+                # Draw the outer circle
+                cv.circle(img, (i[0], i[1]), i[2], (0, 255, 0), 6)
+                # Draw the center of the circle
+                cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
+
+            print("nr=", circles.shape[1])
+            print("lines,columns=", lines," ",columns)
+            show_image('blurred', blurred)
+            show_image('cerc', img)
 
     if circles is not None:
         num_circles = circles.shape[1]
