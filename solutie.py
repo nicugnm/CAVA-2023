@@ -93,6 +93,8 @@ def show_images():
 
             rezultat_path = 'rezultate/' + nr_joc_template + '.txt'
             fisier = open(rezultat_path, 'w')
+            
+            nr_solutii = 0
 
             for i in range(0, 101, 100):
                 # piese pe orizontala
@@ -115,13 +117,15 @@ def show_images():
                                 line_1, col_1 = translate_line_column(lines, columns)
                                 line_2, col_2 = translate_line_column(lines, columns + 100)
 
-                                if (nr_joc, line_1, col_1) not in piese_tabla:
+                                if ((nr_joc, line_1, col_1) not in piese_tabla) and (nr_solutii < 2):
+                                    nr_solutii = nr_solutii + 1
                                     piese_tabla.append((nr_joc, line_1, col_1))
                                     str_tuplu = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                     fisier.writelines(str_tuplu)
                                     print("Linie si col", line_1, col_1)
 
-                                if (nr_joc, line_2, col_2) not in piese_tabla:
+                                if ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii < 2):
+                                    nr_solutii = nr_solutii + 1
                                     piese_tabla.append((nr_joc, line_2, col_2))
                                     str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                     fisier.writelines(str_tuplu2)
@@ -141,7 +145,8 @@ def show_images():
                                 if (are_cercuri_1 is None) and (percentage_white >= 70):
                                     line_1, col_1 = translate_line_column(lines, columns)
 
-                                    if (nr_joc, line_1, col_1) not in piese_tabla:
+                                    if ((nr_joc, line_1, col_1) not in piese_tabla) and (nr_solutii < 2):
+                                        nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
@@ -159,7 +164,8 @@ def show_images():
                                     if (are_cercuri_2 is not None) and (percentage_white >= 60):
                                         line_2, col_2 = translate_line_column(lines, columns + 100)
 
-                                        if (nr_joc, line_2, col_2) not in piese_tabla:
+                                        if ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii < 2):
+                                            nr_solutii = nr_solutii + 1
                                             piese_tabla.append((nr_joc, line_2, col_2))
                                             str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                             fisier.writelines(str_tuplu2)
@@ -177,7 +183,8 @@ def show_images():
                                 if (are_cercuri_2 is None) and (percentage_white >= 70):
                                     line_2, col_2 = translate_line_column(lines, columns + 100)
 
-                                    if (nr_joc, line_2, col_2) not in piese_tabla:
+                                    if ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii < 2):
+                                        nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_2, col_2))
                                         str_tuplu = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
@@ -195,7 +202,8 @@ def show_images():
                                     if (are_cercuri_1 is not None) and (percentage_white >= 60):
                                         line_1, col_1 = translate_line_column(lines, columns)
 
-                                        if (nr_joc, line_1, col_1) not in piese_tabla:
+                                        if ((nr_joc, line_1, col_1) not in piese_tabla) and (nr_solutii < 2):
+                                            nr_solutii = nr_solutii + 1
                                             piese_tabla.append((nr_joc, line_1, col_1))
                                             str_tuplu2 = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                             fisier.writelines(str_tuplu2)
@@ -220,13 +228,15 @@ def show_images():
                                 line_1, col_1 = translate_line_column(lines, columns)
                                 line_2, col_2 = translate_line_column(lines + 100, columns)
 
-                                if (nr_joc, line_1, col_1) not in piese_tabla:
+                                if ((nr_joc, line_1, col_1) not in piese_tabla) and (nr_solutii < 2):
+                                    nr_solutii = nr_solutii + 1
                                     piese_tabla.append((nr_joc, line_1, col_1))
                                     str_tuplu = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                     fisier.writelines(str_tuplu)
                                     print("Linie si col", line_1, col_1)
 
-                                if (nr_joc, line_2, col_2) not in piese_tabla:
+                                if ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii < 2):
+                                    nr_solutii = nr_solutii + 1
                                     piese_tabla.append((nr_joc, line_2, col_2))
                                     str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                     fisier.writelines(str_tuplu2)
@@ -248,7 +258,8 @@ def show_images():
                                 if (are_cercuri_1 is None) and (percentage_white >= 70):
                                     line_1, col_1 = translate_line_column(lines, columns)
 
-                                    if (nr_joc, line_1, col_1) not in piese_tabla:
+                                    if ((nr_joc, line_1, col_1) not in piese_tabla) and (nr_solutii < 2):
+                                        nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
@@ -266,7 +277,8 @@ def show_images():
                                     if (are_cercuri_2 is not None) and (percentage_white >= 60):
                                         line_2, col_2 = translate_line_column(lines + 100, columns)
 
-                                        if (nr_joc, line_2, col_2) not in piese_tabla:
+                                        if ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii < 2):
+                                            nr_solutii = nr_solutii + 1
                                             piese_tabla.append((nr_joc, line_2, col_2))
                                             str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                             fisier.writelines(str_tuplu2)
@@ -284,7 +296,8 @@ def show_images():
                                 if (are_cercuri_2 is None) and (percentage_white >= 70):
                                     line_2, col_2 = translate_line_column(lines + 100, columns)
 
-                                    if (nr_joc, line_2, col_2) not in piese_tabla:
+                                    if ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii < 2):
+                                        nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_2, col_2))
                                         str_tuplu = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
@@ -302,7 +315,8 @@ def show_images():
                                     if (are_cercuri_1 is not None) and (percentage_white >= 60):
                                         line_1, col_1 = translate_line_column(lines, columns)
 
-                                        if (nr_joc, line_1, col_1) not in piese_tabla:
+                                        if ((nr_joc, line_1, col_1) not in piese_tabla) and (nr_solutii <= 2):
+                                            nr_solutii = nr_solutii + 1
                                             piese_tabla.append((nr_joc, line_1, col_1))
                                             str_tuplu2 = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                             fisier.writelines(str_tuplu2)
@@ -348,12 +362,14 @@ def show_images():
                                     line_1, col_1 = translate_line_column(lines, columns)
                                     line_2, col_2 = translate_line_column(lines, columns + 100)
 
-                                    if ((nr_joc, line_1, col_1) not in piese_tabla) and ((nr_joc, line_2, col_2) not in piese_tabla):
+                                    if ((nr_joc, line_1, col_1) not in piese_tabla) and ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii == 0):
+                                        nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
                                         print("Linie si col", line_1, col_1)
 
+                                        nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_2, col_2))
                                         str_tuplu2 = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu2)
@@ -399,12 +415,14 @@ def show_images():
                                     line_1, col_1 = translate_line_column(lines, columns)
                                     line_2, col_2 = translate_line_column(lines + 100, columns)
 
-                                    if ((nr_joc, line_1, col_1) not in piese_tabla) and ((nr_joc, line_2, col_2) not in piese_tabla):
+                                    if ((nr_joc, line_1, col_1) not in piese_tabla) and ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii == 0):
+                                        nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
                                         print("Linie si col", line_1, col_1)
 
+                                        nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_2, col_2))
                                         str_tuplu2 = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu2)
