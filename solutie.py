@@ -2,6 +2,15 @@ import cv2 as cv
 import os
 import numpy as np
 
+### INSTRUCTIUNI:
+# By default, acum se citesc datele din fisierul "antrenare/" -> de ex: "antrenare/1_01.jpg" samd. numarul maxim de jocuri este 5 si numarul maxim de mutari este 20 (inclusiv 5 si 20)
+# Rezultatele vor face output in folder-ul "rezultate/".
+folder_testare = "antrenare"
+folder_rezultate = "rezultate"
+numar_mutari_per_joc = 20
+numar_jocuri = 5
+
+### INFO: In cazul in care nu se detecteaza cercuri sau ceva prea ok, pentru datele de antrenare a mers bine, ar trebui modificate valorile la HoughCircles din metoda detecteaza_cercuri()
 
 def show_image(title, image):
     image = cv.resize(image, (0, 0), fx=0.3, fy=0.3)
@@ -67,6 +76,14 @@ def extrage_careu(image):
     return result
 
 
+def creeaza_folder_rezultate():
+    if not os.path.exists(folder_rezultate):
+        os.mkdir(folder_rezultate)
+        print("A fost creat folderul 'rezultate'. Aici se vor afla solutiile.")
+    else:
+        print("Folderul 'rezultate' deja exista. Aici se vor afla solutiile.")
+
+
 def translate_line_column(line, column):
     line = (line + 100) // 100
     column = (column + 100) // 100
@@ -103,27 +120,49 @@ punctaj_careu = [
     [5, 0, 0, 4, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 5]
 ]
 
+p1_position = 0
+p2_position = 0
 
-def show_images():
-    files = os.listdir('antrenare')
+punctaj_traseu = [None,
+    1,2,3,4,5,6,0,2,5,3,4,6,2,2,0,3,5,4,1,6,2,4,5,5,0,6,3,4,2,0,1,5,1,3,4,4,4,5,0,6,3,5,4,1,3,2,0,0,1,1,2,3,6,3,5,2,1,0,6,6,5,2,1,2,5,0,3,3,5,0,6,1,4,0,6,3,5,1,4,2,
+    6,2,3,1,6,5,6,2,0,4,0,1,6,4,4,1,6,6,3
+]
+
+def solutie():
+    global p1_position
+    global p2_position
+    ### INFO
+    # De aici se citesc datele. Ele se citesc momentan din folder-ul "antrenare". Trebuie modificat in doua locuri. Ma
+    files = os.listdir(folder_testare)
+
+    creeaza_folder_rezultate()
+
     nr_joc = 1
     nr_mutare = 1
     for file in files:
-        if nr_mutare == 21:
+        if nr_mutare == numar_mutari_per_joc + 1:
             nr_joc = nr_joc + 1
             nr_mutare = 1
-        if nr_joc == 6:
+            p1_position = 0
+            p2_position = 0
+        if nr_joc == numar_jocuri + 1:
             break
         if file[-3:] == 'jpg':
-            nr_joc_template = str(nr_joc) + '_' + ('0' if nr_mutare <= 9 else '') + str(nr_mutare)
-            image_path = 'antrenare/' + nr_joc_template + '.jpg'
+            mutari_patch = ('0' if nr_mutare <= 9 else '') + str(nr_mutare)
+            nr_joc_template = str(nr_joc) + '_' + mutari_patch
+            ### INFO
+            #AICI SE MODIFICA PATH-UL DE UNDE
+            image_path = f'{folder_testare}/' + nr_joc_template + '.jpg'
             img = cv.imread(image_path)
             result = extrage_careu(imagine_decupata(img))
 
-            rezultat_path = 'rezultate/' + nr_joc_template + '.txt'
+            rezultat_path = f'{folder_rezultate}/' + nr_joc_template + '.txt'
+            mutari_path = f'{folder_testare}/' + str(nr_joc) + '_mutari.txt'
             fisier = open(rezultat_path, 'w')
 
             nr_solutii = 0
+
+            print(f"Jocul {nr_joc_template}:")
 
             for i in range(0, 101, 100):
                 # piese pe orizontala
@@ -152,7 +191,7 @@ def show_images():
                                     piese_careu_punctaj.append((nr_joc, nr_mutare, line_1, col_1))
                                     str_tuplu = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                     fisier.writelines(str_tuplu)
-                                    print("Linie si col", line_1, col_1)
+                                    print(f"Am gasit piesa la pozitia {line_1}{col_1}")
 
                                 if ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii < 2):
                                     nr_solutii = nr_solutii + 1
@@ -160,7 +199,7 @@ def show_images():
                                     piese_careu_punctaj.append((nr_joc, nr_mutare, line_2, col_2))
                                     str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                     fisier.writelines(str_tuplu2)
-                                    print("Linie si col", line_2, col_2)
+                                    print(f"Am gasit piesa la pozitia {line_2}{col_2}")
 
                             if (are_cercuri_1 is None) or (are_cercuri_2 is None):
                                 low_yellow_fara_cercuri = (90, 0, 190)
@@ -184,7 +223,7 @@ def show_images():
                                         piese_careu_punctaj.append((nr_joc, nr_mutare, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
-                                        print("Linie si col", line_1, col_1)
+                                        print(f"Am gasit piesa la pozitia {line_1}{col_1}")
 
                                     img_hsv_fara_cercuri_2 = cv.cvtColor(img_despartita_2.copy(), cv.COLOR_BGR2HSV)
                                     mask_yellow_hsv_img_despartita_2 = cv.inRange(img_hsv_fara_cercuri_2,
@@ -204,7 +243,7 @@ def show_images():
                                             piese_careu_punctaj.append((nr_joc, nr_mutare, line_2, col_2))
                                             str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                             fisier.writelines(str_tuplu2)
-                                            print("Linie si col", line_2, col_2)
+                                            print(f"Am gasit piesa la pozitia {line_2}{col_2}")
 
                                 img_hsv_fara_cercuri_2 = cv.cvtColor(img_despartita_2.copy(), cv.COLOR_BGR2HSV)
                                 mask_yellow_hsv_img_despartita_2 = cv.inRange(img_hsv_fara_cercuri_2,
@@ -224,7 +263,7 @@ def show_images():
                                         piese_careu_punctaj.append((nr_joc, nr_mutare, line_2, col_2))
                                         str_tuplu = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
-                                        print("Linie si col", line_2, col_2)
+                                        print(f"Am gasit piesa la pozitia {line_2}{col_2}")
 
                                     img_hsv_fara_cercuri_1 = cv.cvtColor(img_despartita.copy(), cv.COLOR_BGR2HSV)
                                     mask_yellow_hsv_img_despartita_1 = cv.inRange(img_hsv_fara_cercuri_1,
@@ -244,7 +283,7 @@ def show_images():
                                             piese_careu_punctaj.append((nr_joc, nr_mutare, line_1, col_1))
                                             str_tuplu2 = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                             fisier.writelines(str_tuplu2)
-                                            print("Linie si col", line_1, col_1)
+                                            print(f"Am gasit piesa la pozitia {line_1}{col_1}")
 
                 # piese pe verticala
                 for lines in range(i, 1500 if i != 0 else 1300, 200):
@@ -271,7 +310,7 @@ def show_images():
                                     piese_careu_punctaj.append((nr_joc, nr_mutare, line_1, col_1))
                                     str_tuplu = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                     fisier.writelines(str_tuplu)
-                                    print("Linie si col", line_1, col_1)
+                                    print(f"Am gasit piesa la pozitia {line_1}{col_1}")
 
                                 if ((nr_joc, line_2, col_2) not in piese_tabla) and (nr_solutii < 2):
                                     nr_solutii = nr_solutii + 1
@@ -279,7 +318,7 @@ def show_images():
                                     piese_careu_punctaj.append((nr_joc, nr_mutare, line_2, col_2))
                                     str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                     fisier.writelines(str_tuplu2)
-                                    print("Linie si col", line_2, col_2)
+                                    print(f"Am gasit piesa la pozitia {line_2}{col_2}")
 
                             if (are_cercuri_1 is None) or (are_cercuri_2 is None):
                                 low_yellow_fara_cercuri = (90, 0, 190)
@@ -303,7 +342,7 @@ def show_images():
                                         piese_careu_punctaj.append((nr_joc, nr_mutare, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
-                                        print("Linie si col", line_1, col_1)
+                                        print(f"Am gasit piesa la pozitia {line_1}{col_1}")
 
                                     img_hsv_fara_cercuri_2 = cv.cvtColor(img_despartita_2.copy(), cv.COLOR_BGR2HSV)
                                     mask_yellow_hsv_img_despartita_2 = cv.inRange(img_hsv_fara_cercuri_2,
@@ -323,7 +362,7 @@ def show_images():
                                             piese_careu_punctaj.append((nr_joc, nr_mutare, line_2, col_2))
                                             str_tuplu2 = str(line_2) + str(col_2) + " " + str(nr_cercuri_2) + str("\n")
                                             fisier.writelines(str_tuplu2)
-                                            print("Linie si col", line_2, col_2)
+                                            print(f"Am gasit piesa la pozitia {line_2}{col_2}")
 
                                 img_hsv_fara_cercuri_2 = cv.cvtColor(img_despartita_2.copy(), cv.COLOR_BGR2HSV)
                                 mask_yellow_hsv_img_despartita_2 = cv.inRange(img_hsv_fara_cercuri_2,
@@ -343,7 +382,7 @@ def show_images():
                                         piese_careu_punctaj.append((nr_joc, nr_mutare, line_2, col_2))
                                         str_tuplu = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
-                                        print("Linie si col", line_2, col_2)
+                                        print(f"Am gasit piesa la pozitia {line_2}{col_2}")
 
                                     img_hsv_fara_cercuri_1 = cv.cvtColor(img_despartita.copy(), cv.COLOR_BGR2HSV)
                                     mask_yellow_hsv_img_despartita_1 = cv.inRange(img_hsv_fara_cercuri_1,
@@ -363,7 +402,7 @@ def show_images():
                                             piese_careu_punctaj.append((nr_joc, nr_mutare, line_1, col_1))
                                             str_tuplu2 = str(line_1) + str(col_1) + " " + str(nr_cercuri_1) + str("\n")
                                             fisier.writelines(str_tuplu2)
-                                            print("Linie si col", line_1, col_1)
+                                            print(f"Am gasit piesa la pozitia {line_1}{col_1}")
 
                 # piese pe orizontala pentru domino cu 0 cercuri
                 for lines in range(0, 1500, 100):
@@ -411,14 +450,14 @@ def show_images():
                                         piese_careu_punctaj.append((nr_joc, nr_mutare, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
-                                        print("Linie si col", line_1, col_1)
+                                        print(f"Am gasit piesa la pozitia {line_1}{col_1}")
 
                                         nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_2, col_2))
                                         piese_careu_punctaj.append((nr_joc, nr_mutare, line_2, col_2))
                                         str_tuplu2 = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu2)
-                                        print("Linie si col", line_2, col_2)
+                                        print(f"Am gasit piesa la pozitia {line_2}{col_2}")
 
                 # piese pe verticala
                 for lines in range(i, 1500 if i != 0 else 1300, 200):
@@ -467,17 +506,17 @@ def show_images():
                                         piese_careu_punctaj.append((nr_joc, nr_mutare, line_1, col_1))
                                         str_tuplu = str(line_1) + str(col_1) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu)
-                                        print("Linie si col", line_1, col_1)
+                                        print(f"Am gasit piesa la pozitia {line_1}{col_1}")
 
                                         nr_solutii = nr_solutii + 1
                                         piese_tabla.append((nr_joc, line_2, col_2))
                                         piese_careu_punctaj.append((nr_joc, nr_mutare, line_2, col_2))
                                         str_tuplu2 = str(line_2) + str(col_2) + " " + str(0) + str("\n")
                                         fisier.writelines(str_tuplu2)
-                                        print("Linie si col", line_2, col_2)
+                                        print(f"Am gasit piesa la pozitia {line_2}{col_2}")
 
             if nr_solutii < 2:
-                print(f"Nu am gasit solutii pentru {nr_joc_template}, scriem default in fisier")
+                print(f"Nu am gasit solutii pentru {nr_joc_template}, scriem default in fisier.")
                 if nr_solutii == 0:
                     piese_tabla.append((nr_joc, 8, 'H'))
                     piese_tabla.append((nr_joc, 8, 'G'))
@@ -486,6 +525,13 @@ def show_images():
                 elif nr_solutii == 1:
                     piese_tabla.append((nr_joc, 8, 'H'))
                     fisier.writelines("8H 6")
+
+            jucator_acum = ''
+            fisier_mutari = open(mutari_path, 'r')
+            mutari_lines = fisier_mutari.readlines()
+            for mutari_line in mutari_lines:
+                if mutari_line[2:4] == mutari_patch:
+                    jucator_acum = mutari_line.strip().split(" ")[1]
 
             fisier.close()
 
@@ -504,25 +550,93 @@ def show_images():
             line2_pct, column2_pct = careu_pct_line_column(int(linie_mutare2), col_mutare2)
 
             careu_pct_piesa_1 = punctaj_careu[line1_pct][column1_pct]
+            if nr_joc_template == '4_03':
+                print("debug aici")
+
             if careu_pct_piesa_1 != 0:
                 print(
                     f"Avem piesa {linie_mutare1}{col_mutare1} care a fost mutata pe casuta cu punct. Punct casuta: {careu_pct_piesa_1} in jocul {nr_joc_template}.")
 
-                if l_pct == c_pct:
+                if (punctaj_traseu[p1_position] == int(l_pct)) or (punctaj_traseu[p1_position] == int(c_pct)):
+                    print(f"player1 primeste 3 puncte bonus deoarece este pe valoarea {punctaj_traseu[p1_position]}, iar capetele domino-ului sunt: {l_pct},{c_pct}, deci exista un capat cu valoarea la care se afla.")
+                    p1_position = p1_position + 3
+                    if jucator_acum == 'player1':
+                        punctaj = punctaj + 3
+
+                if (punctaj_traseu[p2_position] == int(l_pct)) or (punctaj_traseu[p2_position] == int(c_pct)):
+                    print(f"player2 primeste 3 puncte bonus deoarece este pe valoarea {punctaj_traseu[p2_position]}, iar capetele domino-ului sunt: {l_pct},{c_pct}, deci exista un capat cu valoarea la care se afla.")
+                    p2_position = p2_position + 3
+                    if jucator_acum == 'player2':
+                        punctaj = punctaj + 3
+
+                if int(l_pct) == int(c_pct):
                     punctaj = punctaj + 2 * careu_pct_piesa_1
+                    print(
+                        f"Domino-ul are valorile fetelor {l_pct} == {c_pct}, deci prin urmare primeste {2 * careu_pct_piesa_1 } puncte.")
+
+                    if jucator_acum == 'player1':
+                        p1_position = p1_position + 2 *careu_pct_piesa_1
+                        print(f"{jucator_acum} primeste {2*careu_pct_piesa_1} avans in traseu.")
+                    elif jucator_acum == 'player2':
+                        p2_position = p2_position + 2 * careu_pct_piesa_1
+                        print(f"{jucator_acum} primeste {2*careu_pct_piesa_1} avans in traseu.")
                 else:
+                    print(
+                        f"Domino-ul are valorile fetelor {l_pct} si {c_pct}, deci prin urmare primeste {1 * careu_pct_piesa_1 } puncte.")
                     punctaj = punctaj + careu_pct_piesa_1
+
+                    if jucator_acum == 'player1':
+                        p1_position = p1_position + careu_pct_piesa_1
+                        print(f"{jucator_acum} primeste {careu_pct_piesa_1} avans in traseu.")
+                    elif jucator_acum == 'player2':
+                        p2_position = p2_position + careu_pct_piesa_1
+                        print(f"{jucator_acum} primeste {careu_pct_piesa_1} avans in traseu.")
+
 
             careu_pct_piesa_2 = punctaj_careu[line2_pct][column2_pct]
             if careu_pct_piesa_2 != 0:
                 print(
                     f"Avem piesa {linie_mutare2}{col_mutare2} care a fost mutata pe casuta cu punct. Punct casuta: {careu_pct_piesa_2} in jocul {nr_joc_template}.")
 
-                if l_pct == c_pct:
+                if (punctaj_traseu[p1_position] == int(l_pct)) or (punctaj_traseu[p1_position] == int(c_pct)):
+                    print(
+                        f"player1 primeste 3 puncte bonus deoarece este pe valoarea {punctaj_traseu[p1_position]}, iar capetele domino-ului sunt: {l_pct},{c_pct}, deci exista un capat cu valoarea la care se afla.")
+                    p1_position = p1_position + 3
+                    if jucator_acum == 'player1':
+                        punctaj = punctaj + 3
+
+                if (punctaj_traseu[p2_position] == int(l_pct)) or (punctaj_traseu[p2_position] == int(c_pct)):
+                    print(
+                        f"player2 primeste 3 puncte bonus deoarece este pe valoarea {punctaj_traseu[p2_position]}, iar capetele domino-ului sunt: {l_pct},{c_pct}, deci exista un capat cu valoarea la care se afla.")
+                    p2_position = p2_position + 3
+                    if jucator_acum == 'player2':
+                        punctaj = punctaj + 3
+
+                if int(l_pct) == int(c_pct):
+                    print(f"Domino-ul are valorile fetelor {l_pct} == {c_pct}, deci prin urmare primeste {2*careu_pct_piesa_2} puncte.")
                     punctaj = punctaj + 2 * careu_pct_piesa_2
+
+                    if jucator_acum == 'player1':
+                        p1_position = p1_position + 2*careu_pct_piesa_2
+                        print(f"{jucator_acum} primeste {2*careu_pct_piesa_2} avans in traseu.")
+                    elif jucator_acum == 'player2':
+                        p2_position = p2_position + 2*careu_pct_piesa_2
+                        print(f"{jucator_acum} primeste {2*careu_pct_piesa_2} avans in traseu.")
                 else:
+                    print(f"Domino-ul are valorile fetelor {l_pct} si {c_pct}, deci prin urmare primeste {1*careu_pct_piesa_2} puncte.")
                     punctaj = punctaj + careu_pct_piesa_2
 
+                    if jucator_acum == 'player1':
+                        p1_position = p1_position + careu_pct_piesa_2
+                        print(f"{jucator_acum} primeste {careu_pct_piesa_2} avans in traseu.")
+                    elif jucator_acum == 'player2':
+                        p2_position = p2_position + careu_pct_piesa_2
+                        print(f"{jucator_acum} primeste {careu_pct_piesa_2} avans in traseu.")
+
+            print(f"Pozitia player1 este acum la index: {p1_position} si valoarea {punctaj_traseu[p1_position]}")
+            print(f"Pozitia player2 este acum la index: {p2_position} si valoarea {punctaj_traseu[p2_position]}")
+
+            fisier_mutari.close()
             fisier_pct_read.close()
 
             fisier_pct = open(rezultat_path, 'a')
@@ -531,37 +645,37 @@ def show_images():
 
             fisier_pct.close()
 
+            print(20 * "--")
+
             nr_mutare = nr_mutare + 1
 
 
 def detecteaza_cercuri(img, show=0, lines=0, columns=0):
-    # Convert to grayscale
     # show_image('img', img)
+    # convertesc imaginea in gri
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
-    # Apply Gaussian blur to reduce noise and improve circle detection
+    # aplic gaussian blur pentru a reduce zgomotul
     blurred = cv.GaussianBlur(gray, (5, 5), 0)
 
-    # Use the Hough Circle Transform to detect circles
+    # hough circle transform pentru detectare cercuri
     circles = cv.HoughCircles(
         blurred,
         cv.HOUGH_GRADIENT,
-        dp=1,  # Inverse ratio of the accumulator resolution to the image resolution (1 means the same resolution)
-        minDist=25,  # Minimum distance between the centers of detected circles
-        param1=600,  # Higher threshold for the internal Canny edge detector
-        param2=25,  # Threshold for circle detection (lower means more circles will be detected)
-        minRadius=10,  # Minimum radius of the detected circles
-        maxRadius=14  # Maximum radius of the detected circles
+        dp=1,
+        minDist=25,  # distanta minima intre centrul a doua cercuri
+        param1=600,  # pentru canny edge detector, threshould
+        param2=25,  # threshould pentru detectia de cercuri (val mica inseamna mai multe detectii)
+        minRadius=10,  # raza minima a cercurilor detectate
+        maxRadius=14  # raza maxima a cercurilor detectate
     )
 
+    # pentru debug doar
     if show != 0:
-        # If circles are found, draw them on the image
         if circles is not None:
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
-                # Draw the outer circle
                 cv.circle(img, (i[0], i[1]), i[2], (0, 255, 0), 6)
-                # Draw the center of the circle
                 cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
 
             print("nr=", circles.shape[1])
@@ -576,4 +690,4 @@ def detecteaza_cercuri(img, show=0, lines=0, columns=0):
         return None, None
 
 
-show_images()
+solutie()
