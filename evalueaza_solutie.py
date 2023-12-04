@@ -1,4 +1,3 @@
-#to be written
 import os
 
 punctaj_final = 2
@@ -22,14 +21,16 @@ for file in files:
         lines = f.readlines()
         my_lines = f_my_sol.readlines()
 
-        if len(my_lines) > 2:
-            print("Am gasit mai mult de 2 mutari la:", nr_joc_template)
+        # if len(my_lines) > 2:
+        #     print("Am gasit mai mult de 2 mutari la:", nr_joc_template)
 
         first_element_original = lines[0].strip()
         second_element_original = lines[1].strip()
+        third_element_original = lines[2].strip()
 
         mine_first_element = my_lines[0].strip()
         mine_second_element = my_lines[1].strip()
+        mine_third_element = my_lines[2].strip()
 
         split_f_original = first_element_original.split(" ")
         split_s_original = second_element_original.split(" ")
@@ -66,6 +67,11 @@ for file in files:
         else:
             print("diferenta piesa=",nr_joc_template)
 
+        if third_element_original == mine_third_element:
+            punctaj_final = punctaj_final + 0.02
+        else:
+            print(f"diferenta punctaj jucator la {nr_joc_template}")
+
         nr_mutare = nr_mutare + 1
 
-print("pct final=",punctaj_final,"/9")
+print("pct final=",punctaj_final,"/11")
