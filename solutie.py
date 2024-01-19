@@ -5,10 +5,11 @@ import numpy as np
 ### INSTRUCTIUNI:
 # By default, acum se citesc datele din fisierul "antrenare/" -> de ex: "antrenare/1_01.jpg" samd. numarul maxim de jocuri este 5 si numarul maxim de mutari este 20 (inclusiv 5 si 20)
 # Rezultatele vor face output in folder-ul "rezultate/".
-folder_testare = "antrenare"
-folder_rezultate = "rezultate"
+folder_testare = "testare"
+folder_rezultate = "rezultate-testare"
 numar_mutari_per_joc = 20
 numar_jocuri = 5
+
 
 ### INFO: In cazul in care nu se detecteaza cercuri sau ceva prea ok, pentru datele de antrenare a mers bine, ar trebui modificate valorile la HoughCircles din metoda detecteaza_cercuri()
 
@@ -124,9 +125,12 @@ p1_position = 0
 p2_position = 0
 
 punctaj_traseu = [None,
-    1,2,3,4,5,6,0,2,5,3,4,6,2,2,0,3,5,4,1,6,2,4,5,5,0,6,3,4,2,0,1,5,1,3,4,4,4,5,0,6,3,5,4,1,3,2,0,0,1,1,2,3,6,3,5,2,1,0,6,6,5,2,1,2,5,0,3,3,5,0,6,1,4,0,6,3,5,1,4,2,
-    6,2,3,1,6,5,6,2,0,4,0,1,6,4,4,1,6,6,3
-]
+                  1, 2, 3, 4, 5, 6, 0, 2, 5, 3, 4, 6, 2, 2, 0, 3, 5, 4, 1, 6, 2, 4, 5, 5, 0, 6, 3, 4, 2, 0, 1, 5, 1, 3,
+                  4, 4, 4, 5, 0, 6, 3, 5, 4, 1, 3, 2, 0, 0, 1, 1, 2, 3, 6, 3, 5, 2, 1, 0, 6, 6, 5, 2, 1, 2, 5, 0, 3, 3,
+                  5, 0, 6, 1, 4, 0, 6, 3, 5, 1, 4, 2,
+                  6, 2, 3, 1, 6, 5, 6, 2, 0, 4, 0, 1, 6, 4, 4, 1, 6, 6, 3
+                  ]
+
 
 def solutie():
     global p1_position
@@ -150,8 +154,7 @@ def solutie():
         if file[-3:] == 'jpg':
             mutari_patch = ('0' if nr_mutare <= 9 else '') + str(nr_mutare)
             nr_joc_template = str(nr_joc) + '_' + mutari_patch
-            ### INFO
-            #AICI SE MODIFICA PATH-UL DE UNDE
+
             image_path = f'{folder_testare}/' + nr_joc_template + '.jpg'
             img = cv.imread(image_path)
             result = extrage_careu(imagine_decupata(img))
@@ -520,11 +523,11 @@ def solutie():
                 if nr_solutii == 0:
                     piese_tabla.append((nr_joc, 8, 'H'))
                     piese_tabla.append((nr_joc, 8, 'G'))
-                    fisier.writelines("8H 6")
-                    fisier.writelines("8G 6")
+                    fisier.writelines("8H 6\n")
+                    fisier.writelines("8G 6\n")
                 elif nr_solutii == 1:
                     piese_tabla.append((nr_joc, 8, 'H'))
-                    fisier.writelines("8H 6")
+                    fisier.writelines("8H 6\n")
 
             jucator_acum = ''
             fisier_mutari = open(mutari_path, 'r')
@@ -534,6 +537,18 @@ def solutie():
                     jucator_acum = mutari_line.strip().split(" ")[1]
 
             fisier.close()
+
+
+            # order by
+            fisier_order = open(rezultat_path, 'r')
+            lines_order = fisier_order.readlines()
+            fisier_order.close()
+
+            fisier_order_write = open(rezultat_path, 'w')
+            lines_order.sort(key=sort_key, reverse=True)
+            for lines in lines_order:
+                fisier_order_write.writelines(lines)
+            fisier_order_write.close()
 
             fisier_pct_read = open(rezultat_path, 'r')
             lines_pct = fisier_pct_read.readlines()
@@ -550,21 +565,23 @@ def solutie():
             line2_pct, column2_pct = careu_pct_line_column(int(linie_mutare2), col_mutare2)
 
             careu_pct_piesa_1 = punctaj_careu[line1_pct][column1_pct]
-            if nr_joc_template == '4_03':
-                print("debug aici")
+            # if nr_joc_template == '4_03':
+            #     print("debug aici")
 
             if careu_pct_piesa_1 != 0:
                 print(
                     f"Avem piesa {linie_mutare1}{col_mutare1} care a fost mutata pe casuta cu punct. Punct casuta: {careu_pct_piesa_1} in jocul {nr_joc_template}.")
 
                 if (punctaj_traseu[p1_position] == int(l_pct)) or (punctaj_traseu[p1_position] == int(c_pct)):
-                    print(f"player1 primeste 3 puncte bonus deoarece este pe valoarea {punctaj_traseu[p1_position]}, iar capetele domino-ului sunt: {l_pct},{c_pct}, deci exista un capat cu valoarea la care se afla.")
+                    print(
+                        f"player1 primeste 3 puncte bonus deoarece este pe valoarea {punctaj_traseu[p1_position]}, iar capetele domino-ului sunt: {l_pct},{c_pct}, deci exista un capat cu valoarea la care se afla.")
                     p1_position = p1_position + 3
                     if jucator_acum == 'player1':
                         punctaj = punctaj + 3
 
                 if (punctaj_traseu[p2_position] == int(l_pct)) or (punctaj_traseu[p2_position] == int(c_pct)):
-                    print(f"player2 primeste 3 puncte bonus deoarece este pe valoarea {punctaj_traseu[p2_position]}, iar capetele domino-ului sunt: {l_pct},{c_pct}, deci exista un capat cu valoarea la care se afla.")
+                    print(
+                        f"player2 primeste 3 puncte bonus deoarece este pe valoarea {punctaj_traseu[p2_position]}, iar capetele domino-ului sunt: {l_pct},{c_pct}, deci exista un capat cu valoarea la care se afla.")
                     p2_position = p2_position + 3
                     if jucator_acum == 'player2':
                         punctaj = punctaj + 3
@@ -572,17 +589,17 @@ def solutie():
                 if int(l_pct) == int(c_pct):
                     punctaj = punctaj + 2 * careu_pct_piesa_1
                     print(
-                        f"Domino-ul are valorile fetelor {l_pct} == {c_pct}, deci prin urmare primeste {2 * careu_pct_piesa_1 } puncte.")
+                        f"Domino-ul are valorile fetelor {l_pct} == {c_pct}, deci prin urmare primeste {2 * careu_pct_piesa_1} puncte.")
 
                     if jucator_acum == 'player1':
-                        p1_position = p1_position + 2 *careu_pct_piesa_1
-                        print(f"{jucator_acum} primeste {2*careu_pct_piesa_1} avans in traseu.")
+                        p1_position = p1_position + 2 * careu_pct_piesa_1
+                        print(f"{jucator_acum} primeste {2 * careu_pct_piesa_1} avans in traseu.")
                     elif jucator_acum == 'player2':
                         p2_position = p2_position + 2 * careu_pct_piesa_1
-                        print(f"{jucator_acum} primeste {2*careu_pct_piesa_1} avans in traseu.")
+                        print(f"{jucator_acum} primeste {2 * careu_pct_piesa_1} avans in traseu.")
                 else:
                     print(
-                        f"Domino-ul are valorile fetelor {l_pct} si {c_pct}, deci prin urmare primeste {1 * careu_pct_piesa_1 } puncte.")
+                        f"Domino-ul are valorile fetelor {l_pct} si {c_pct}, deci prin urmare primeste {1 * careu_pct_piesa_1} puncte.")
                     punctaj = punctaj + careu_pct_piesa_1
 
                     if jucator_acum == 'player1':
@@ -591,7 +608,6 @@ def solutie():
                     elif jucator_acum == 'player2':
                         p2_position = p2_position + careu_pct_piesa_1
                         print(f"{jucator_acum} primeste {careu_pct_piesa_1} avans in traseu.")
-
 
             careu_pct_piesa_2 = punctaj_careu[line2_pct][column2_pct]
             if careu_pct_piesa_2 != 0:
@@ -613,17 +629,19 @@ def solutie():
                         punctaj = punctaj + 3
 
                 if int(l_pct) == int(c_pct):
-                    print(f"Domino-ul are valorile fetelor {l_pct} == {c_pct}, deci prin urmare primeste {2*careu_pct_piesa_2} puncte.")
+                    print(
+                        f"Domino-ul are valorile fetelor {l_pct} == {c_pct}, deci prin urmare primeste {2 * careu_pct_piesa_2} puncte.")
                     punctaj = punctaj + 2 * careu_pct_piesa_2
 
                     if jucator_acum == 'player1':
-                        p1_position = p1_position + 2*careu_pct_piesa_2
-                        print(f"{jucator_acum} primeste {2*careu_pct_piesa_2} avans in traseu.")
+                        p1_position = p1_position + 2 * careu_pct_piesa_2
+                        print(f"{jucator_acum} primeste {2 * careu_pct_piesa_2} avans in traseu.")
                     elif jucator_acum == 'player2':
-                        p2_position = p2_position + 2*careu_pct_piesa_2
-                        print(f"{jucator_acum} primeste {2*careu_pct_piesa_2} avans in traseu.")
+                        p2_position = p2_position + 2 * careu_pct_piesa_2
+                        print(f"{jucator_acum} primeste {2 * careu_pct_piesa_2} avans in traseu.")
                 else:
-                    print(f"Domino-ul are valorile fetelor {l_pct} si {c_pct}, deci prin urmare primeste {1*careu_pct_piesa_2} puncte.")
+                    print(
+                        f"Domino-ul are valorile fetelor {l_pct} si {c_pct}, deci prin urmare primeste {1 * careu_pct_piesa_2} puncte.")
                     punctaj = punctaj + careu_pct_piesa_2
 
                     if jucator_acum == 'player1':
@@ -649,6 +667,9 @@ def solutie():
 
             nr_mutare = nr_mutare + 1
 
+
+def sort_key(string):
+    return int(string.split()[1])
 
 def detecteaza_cercuri(img, show=0, lines=0, columns=0):
     # show_image('img', img)

@@ -1,77 +1,103 @@
-import os
+#to be written
+def compare_annotations(filename_predicted,filename_gt,verbose=0):
+	p = open(filename_predicted,"rt")  	
+	gt = open(filename_gt,"rt")  	
+	all_lines_p = p.readlines()
+	all_lines_gt = gt.readlines()
 
-punctaj_final = 2
+	#positions and values	
+	number_lines_p = len(all_lines_p)
+	number_lines_gt = len(all_lines_gt)
 
-files = os.listdir('antrenare')
-nr_joc = 1
-nr_mutare = 1
-for file in files:
-    if nr_mutare == 21:
-        nr_joc = nr_joc + 1
-        nr_mutare = 1
-    if nr_joc == 6:
-        break
-    if file[-3:] == 'txt':
-        nr_joc_template = str(nr_joc) + '_' + ('0' if nr_mutare <= 9 else '') + str(nr_mutare)
-        image_path = 'antrenare/' + nr_joc_template + '.txt'
-        image_path_my_sol = 'rezultate/' + nr_joc_template + '.txt'
+	match_positions = 1
+	match_values = 1
+	match_score = 1
 
-        f = open(image_path)
-        f_my_sol = open(image_path_my_sol)
-        lines = f.readlines()
-        my_lines = f_my_sol.readlines()
+	for i in range(number_lines_gt-1):		
+		current_pos_gt, current_value_gt = all_lines_gt[i].split()
+		
+		if verbose:
+			print(i)
+			print(current_pos_gt,current_value_gt)
 
-        # if len(my_lines) > 2:
-        #     print("Am gasit mai mult de 2 mutari la:", nr_joc_template)
+		try:
+			current_pos_p, current_value_p = all_lines_p[i].split()
+			
+			if verbose:
+				print(current_pos_p,current_value_p)
 
-        first_element_original = lines[0].strip()
-        second_element_original = lines[1].strip()
-        third_element_original = lines[2].strip()
+			if(current_pos_p != current_pos_gt):
+				match_positions = 0
+			if(current_value_p != current_value_gt):
+				match_values = 0	
+		except:
+			match_positions = 0
+			match_values = 0		
+	try:
+		#verify if there are more possitions + values lines in the prediction file
+		current_pos_p, current_value_p = all_lines_p[i+1].split()
+		match_positions = 0
+		match_values = 0
 
-        mine_first_element = my_lines[0].strip()
-        mine_second_element = my_lines[1].strip()
-        mine_third_element = my_lines[2].strip()
+		if verbose:
+			print("EXTRA LINE:")
+			print(current_pos_p,current_value_p)
+			
+	except:
+		pass
 
-        split_f_original = first_element_original.split(" ")
-        split_s_original = second_element_original.split(" ")
 
-        split_f_mine = mine_first_element.split(" ")
-        split_s_mine = mine_second_element.split(" ")
 
-        if ((split_f_original[0] == split_f_mine[0]) or (split_f_original[0] == split_s_mine[0])) and ((split_s_original[0] == split_f_mine[0]) or (split_s_original[0] == split_s_mine[0])):
-            if (split_f_original[0] == split_f_mine[0]) and (split_s_original[0] == split_f_mine[0]):
-                if split_f_original[1] == split_f_mine[1] and split_s_original[1] == split_f_mine[1]:
-                    punctaj_final = punctaj_final + 0.02
-                else:
-                    print("diferenta pct=", nr_joc_template)
-            elif (split_f_original[0] == split_f_mine[0]) and (split_s_original[0] == split_s_mine[0]):
-                if split_f_original[1] == split_f_mine[1] and split_s_original[1] == split_s_mine[1]:
-                    punctaj_final = punctaj_final + 0.02
-                else:
-                    print("diferenta pct=", nr_joc_template)
+	points_positions = 0.05 * match_positions
+	points_values = 0.02 * match_values	
 
-            elif (split_f_original[0] == split_s_mine[0]) and (split_s_original[0] == split_f_mine[0]):
-                if split_f_original[1] == split_s_mine[1] and split_s_original[1] == split_f_mine[1]:
-                    punctaj_final = punctaj_final + 0.02
-                else:
-                    print("diferenta pct=", nr_joc_template)
-            elif (split_f_original[0] == split_s_mine[0]) and (split_s_original[0] == split_s_mine[0]):
-                if split_f_original[1] == split_s_mine[1] and split_s_original[1] == split_s_mine[1]:
-                    punctaj_final = punctaj_final + 0.02
-                else:
-                    print("diferenta pct=", nr_joc_template)
-            else:
-                print("diferenta pct=", nr_joc_template)
+	#scores
+	last_line_p = all_lines_p[-1]
+	score_p = last_line_p.split()
+	last_line_gt= all_lines_gt[-1]
+	score_gt = last_line_gt.split()
+	
+	if verbose:
+		print(score_p,score_gt)
 
-            punctaj_final = punctaj_final + 0.05
-        else:
-            print("diferenta piesa=",nr_joc_template)
+	if(score_p != score_gt):
+		match_score = 0
 
-        if third_element_original == mine_third_element:
-            punctaj_final = punctaj_final + 0.02
-        else:
-            print(f"diferenta punctaj jucator la {nr_joc_template}")
+	points_score = 0.02 * match_score
 
-        nr_mutare = nr_mutare + 1
+	return points_positions, points_values,points_score
 
-print("pct final=",punctaj_final,"/11")
+#change this on your machine pointing to your results (txt files)
+predictions_path_root = "rezultate/"
+
+#change this on your machine to point to the ground-truth test
+gt_path_root = "ground-truth-test/"
+
+
+#change this to 1 if you want to print results at each turn
+verbose = 1
+total_points = 0
+for game in range(1,6): #for one game change this to range(1,2), otherwise put range(1,6)
+	for turn in range(1,21):
+		
+		name_turn = str(turn)
+		if(turn< 10):
+			name_turn = '0'+str(turn)
+
+		filename_predicted = predictions_path_root + str(game) + '_' + name_turn + '.txt'
+		filename_gt = gt_path_root + str(game) + '_' + name_turn + '.txt'
+
+		game_turn = str(game) + '_' + name_turn
+		points_position = 0
+		points_values = 0
+		points_score = 0		
+
+		try:
+			points_position, points_values, points_score = compare_annotations(filename_predicted,filename_gt,verbose)
+		except:
+			print("For image: ", game_turn, " encountered an error")
+
+		print("Image: ", game_turn, "Points position: ", points_position, "Points values: ",points_values, "Points score: ", points_score)
+		total_points = total_points + points_position + points_values + points_score
+
+print(total_points)
