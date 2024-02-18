@@ -5,14 +5,14 @@ from Visualize import *
 
 
 params: Parameters = Parameters()
-params.dim_window = 36  # exemplele pozitive (fete de oameni cropate) au 36x36 pixeli
-params.dim_hog_cell = 6  # dimensiunea celulei
-params.overlap = 0.3
-params.number_positive_examples = 6713  # numarul exemplelor pozitive
-params.number_negative_examples = 10000  # numarul exemplelor negative
+params.dim_window = 72  # exemplele pozitive (fete de oameni cropate) au 36x36 pixeli
+params.dim_hog_cell = 3 # dimensiunea celulei
+params.overlap = 0.3 #3
+params.number_positive_examples = 997  # numarul exemplelor pozitive
+params.number_negative_examples = 7890  # numarul exemplelor negative
 
-params.threshold = 2.5 # toate ferestrele cu scorul > threshold si maxime locale devin detectii
-params.has_annotations = True
+params.threshold = 0.1 # toate ferestrele cu scorul > threshold si maxime locale devin detectii
+params.has_annotations = False
 
 params.use_hard_mining = False  # (optional)antrenare cu exemple puternic negative
 params.use_flip_images = True  # adauga imaginile cu fete oglindite

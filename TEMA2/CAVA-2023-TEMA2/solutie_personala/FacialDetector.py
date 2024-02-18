@@ -16,6 +16,7 @@ class FacialDetector:
     def __init__(self, params:Parameters):
         self.params = params
         self.best_model = None
+        self.best_model = None
 
     def get_positive_descriptors(self):
         # in aceasta functie calculam descriptorii pozitivi
@@ -46,38 +47,35 @@ class FacialDetector:
         positive_descriptors = np.array(positive_descriptors)
         return positive_descriptors
 
-    def get_negative_descriptors(self):
-        # in aceasta functie calculam descriptorii negativi
-        # vom returna un numpy array de dimensiuni NXD
-        # unde N - numar exemplelor negative
-        # iar D - dimensiunea descriptorului
-        # avem 274 de imagini negative, vream sa avem self.params.number_negative_examples (setat implicit cu 10000)
-        # de exemple negative, din fiecare imagine vom genera aleator self.params.number_negative_examples // 274
-        # patch-uri de dimensiune 36x36 pe care le vom considera exemple negative
 
+    def get_negative_descriptors(self):
         images_path = os.path.join(self.params.dir_neg_examples, '*.jpg')
         files = glob.glob(images_path)
         num_images = len(files)
         num_negative_per_image = self.params.number_negative_examples // num_images
         negative_descriptors = []
+
         print('Calculam descriptorii pt %d imagini negative' % num_images)
         for i in range(num_images):
             print('Procesam exemplul negativ numarul %d...' % i)
             img = cv.imread(files[i], cv.IMREAD_GRAYSCALE)
-            # TODO: completati codul functiei in continuare
-            num_rows = img.shape[0]
-            num_cols = img.shape[1]
-            x = np.random.randint(low=0, high=num_cols - self.params.dim_window, size=num_negative_per_image)
-            y = np.random.randint(low=0, high=num_rows - self.params.dim_window, size=num_negative_per_image)
+            img = cv.resize(img, (180, 180))  # Make sure to resize the image to a standard size
 
-            for idx in range(len(y)):
-                patch = img[y[idx]: y[idx] + self.params.dim_window, x[idx]: x[idx] + self.params.dim_window]
+            # Sample different regions by dividing the image into a grid and sampling from each grid cell
+            rows, cols = img.shape
+            grid_size_row = rows // self.params.dim_window
+            grid_size_col = cols // self.params.dim_window
+            for _ in range(num_negative_per_image):
+                row_idx = np.random.randint(0, grid_size_row)
+                col_idx = np.random.randint(0, grid_size_col)
+                y = row_idx * self.params.dim_window
+                x = col_idx * self.params.dim_window
+                patch = img[y:y + self.params.dim_window, x:x + self.params.dim_window]
                 descr = hog(patch, pixels_per_cell=(self.params.dim_hog_cell, self.params.dim_hog_cell),
-                            cells_per_block=(2, 2), feature_vector=False)
-                negative_descriptors.append(descr.flatten())
+                            cells_per_block=(2, 2), feature_vector=True)
+                negative_descriptors.append(descr)
 
-        negative_descriptors = np.array(negative_descriptors)
-        return negative_descriptors
+        return np.array(negative_descriptors)
 
     def train_classifier(self, training_examples, train_labels):
         svm_file_name = os.path.join(self.params.dir_save_files, 'best_model_%d_%d_%d' %
@@ -160,7 +158,7 @@ class FacialDetector:
         sorted_scores = image_scores[sorted_indices]
 
         is_maximal = np.ones(len(image_detections)).astype(bool)
-        iou_threshold = 0.3
+        iou_threshold = 2
         for i in range(len(sorted_image_detections) - 1):
             if is_maximal[i] == True:  # don't change to 'is True' because is a numpy True and is not a python True :)
                 for j in range(i + 1, len(sorted_image_detections)):
@@ -216,6 +214,7 @@ class FacialDetector:
             for y in range(0, num_rows - num_cell_in_template):
                 for x in range(0, num_cols - num_cell_in_template):
                     descr = hog_descriptors[y:y + num_cell_in_template, x:x + num_cell_in_template].flatten()
+
                     score = np.dot(descr, w)[0] + bias
                     if score > self.params.threshold:
                         x_min = int(x * self.params.dim_hog_cell)
@@ -241,6 +240,11 @@ class FacialDetector:
             print('Timpul de procesarea al imaginii de testare %d/%d este %f sec.'
                   % (i, num_test_images, end_time - start_time))
 
+        file_names_list = ['detections_wilma.npy', 'file_names_wilma.npy', 'scores_wilma.npy']
+        for data, file_name in zip([detections, file_names, scores], file_names_list):
+            file_path = os.path.join(self.params.dir_save_files, file_name)
+            np.save(file_path, data)
+
         return detections, scores, file_names
 
     def compute_average_precision(self, rec, prec):
@@ -257,7 +261,7 @@ class FacialDetector:
     def eval_detections(self, detections, scores, file_names):
         ground_truth_file = np.loadtxt(self.params.path_annotations, dtype='str')
         ground_truth_file_names = np.array(ground_truth_file[:, 0])
-        ground_truth_detections = np.array(ground_truth_file[:, 1:], np.int)
+        ground_truth_detections = np.array(ground_truth_file[:, 1:], dtype=int)
 
         num_gt_detections = len(ground_truth_detections)  # numar total de adevarat pozitive
         gt_exists_detection = np.zeros(num_gt_detections)
